@@ -19,47 +19,48 @@ router.post('/new-password', authController.postNewPassword);
 router.post('/reset', authController.postReset);
 
 router.post(
-'/signup',
-[ 
-    check('email')
-    .isEmail()
-    .withMessage('Please enter valid email')
-    .custom((value, { req }) => {
-        // if(value === 'test@test.com'){
-        //     throw new Error('This email address is forbidden');
-        // }
-        // return true;
-        return User.findOne({email: value})
-        .then(userDoc => {
-            if(userDoc){
-                return Promise.reject('E-mail already exists, Please pick a different one.');
-            }
+    '/signup',
+    [ 
+      check('email')
+        .isEmail()
+        .withMessage('Please enter a valid email')
+        .custom((value, { req }) => {
+          return User.findOne({ email: value })
+            .then(userDoc => {
+              if (userDoc) {
+                return Promise.reject('E-mail already exists. Please pick a different one.');
+              }
+            });
         })
-    }) ,
-    check(
-            'password',
-            'Please enter a password with only numbers and letters and at least 5 characters'
-        )
-        .isLength({min:5})
-        .isAlphanumeric(),
-    check('confirmPassword').custom((value, { req }) => {
-        if(value !== req.body.password){
-            throw new Error('Passwords have to match!!');
-        }
-        return true;
-    })
-],
- authController.postSignup
- );
-
+        .normalizeEmail(),
+      check('password')
+        .trim()
+        .isLength({ min: 5 })
+        .withMessage('Password must be at least 5 characters long')
+        .isAlphanumeric()
+        .withMessage('Password must only contain numbers and letters'),
+      check('confirmPassword')
+        .trim()
+        .custom((value, { req }) => {
+          if (value !== req.body.password) {
+            throw new Error('Passwords must match');
+          }
+          return true;
+        }),
+    ],
+    authController.postSignup
+);
+  
 router.post('/login', 
  [
     check('email')
-    .isEmail()
-    .withMessage('Please enter a valid email'),
+        .isEmail()
+        .withMessage('Please enter a valid email')
+        .normalizeEmail(),
     check('password', 'Password has to be Valid')
-    .isLength({min:5})
-    .isAlphanumeric()
+        .trim()
+        .isLength({min:5})
+        .isAlphanumeric(),
  ],
  authController.postLogin
  );

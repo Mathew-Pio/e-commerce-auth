@@ -235,8 +235,8 @@ form {
 }
 
 .user-message--error{
-  /* border: 1px solid red; */
-  background: rgb(225, 176, 176);
+  border: 1px solid red; 
+  background: rgb(226, 160, 160);
 }
 
 @media (min-width: 768px) {
