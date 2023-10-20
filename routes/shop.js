@@ -25,4 +25,10 @@ router.get('/orders', isAuth, shopController.getOrders);
 
 router.get('/orders/:orderId', isAuth, shopController.getInvoice);
 
+router.get('/checkout', isAuth, shopController.getCheckout);
+
+router.get('/checkout/cancel', shopController.getCheckout)
+
+router.get('/checkout/success', shopController.getCheckoutSuccess);
+
 module.exports = router;
