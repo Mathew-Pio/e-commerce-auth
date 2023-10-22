@@ -7,12 +7,16 @@ const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const multer = require('multer');
-
+require('dotenv').config();
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 const flash = require('connect-flash');
 const errorController = require('./controllers/error');
 const User = require('./models/user');
+const fs = require('fs');
 
-const MONGODB_URI = 'mongodb+srv://MathewPio:Nodedeveloper_2007@cluster0.xtah2km.mongodb.net/shop?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URL;
 
 const app = express();
 const store = MongoDBStore({
@@ -44,6 +48,14 @@ const fileFilter = (req, file, cb) => {
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'),
+  {flags: 'a'}
+)
+
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', {stream: accessLogStream}));
+
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
@@ -57,7 +69,6 @@ app.use(
 );
 app.use(csrfProtection);  
 app.use(flash());
-
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
@@ -87,20 +98,20 @@ app.use(shopRoutes);
 app.use(authRoutes);
 
 app.get('/500', errorController.get500);
-
+ 
 app.use(errorController.get404);
 
-// app.use((error, req, res, next) => {
-//   //  res.redirect('/500');
-//   res.status(500).render('500', { pageTitle: 'Error', path: '/500',  isAuthenticated: req.session.isLoggedIn });
-// })
+app.use((error, req, res, next) => {
+  //  res.redirect('/500');
+  res.status(500).render('500', { pageTitle: 'Error', path: '/500',  isAuthenticated: req.session.isLoggedIn });
+})
 
 mongoose
   .connect(
     MONGODB_URI
   )
   .then(result => {
-    app.listen(3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch(err => {
     console.log(err);
